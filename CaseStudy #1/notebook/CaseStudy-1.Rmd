@@ -1,0 +1,547 @@
+---
+title: "Data Analysis and Visualization in R - CaseStudy I"
+author: "Ganesh Chandrasekaran, Chandramohan Sudar, Mohammad Shaukat, Aditi Deshpande"
+date: "11 Dezember 2019"
+
+
+---
+
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F, error = F)
+```
+
+
+
+***
+
+# Add libraries
+```{r echo = TRUE, results = "hide"}
+library(stringr) # String operations
+library(chron) # Time operations
+library(ggplot2) # Plotting
+library(plyr) # Data Manipulation
+library(dplyr) # Splitting Applying Combining Data
+library(tidyverse) #Melting purpose
+library(reshape2)
+library(data.table) # for setDT
+```
+
+
+# Read the datasets
+```{r echo = TRUE}
+airlines_df <- read.csv("../datasets/airlines.csv")
+airports_df <- read.csv("../datasets/airports.csv")
+flights_df <- read.csv("../datasets/flightsLAX.csv")
+
+```
+
+***
+
+# Print flights_df
+```{r echo = F}
+head(flights_df)
+```
+
+# Data Cleaning: Convert time columns to the time format
+
+Use pad and gsub to convert the time columns to correct time format
+```{r}
+convertToTime <- function(timeColumn) {
+  # Add leading 0s
+  timeColumn <- str_pad(timeColumn, width = 4, side = "left", pad = "0")
+  # Add trailing 0s
+  timeColumn <- str_pad(timeColumn, width = 6, side = "right", pad = "0")
+  # Convert to time format
+  times(gsub("(..)(..)(..)", "\\1:\\2:\\3", timeColumn))
+}
+
+flights_df$SCHEDULED_DEPARTURE <- convertToTime(flights_df$SCHEDULED_DEPARTURE)
+flights_df$DEPARTURE_TIME <- convertToTime(flights_df$DEPARTURE_TIME)
+flights_df$SCHEDULED_ARRIVAL <- convertToTime(flights_df$SCHEDULED_ARRIVAL)
+flights_df$ARRIVAL_TIME <- convertToTime(flights_df$ARRIVAL_TIME)
+```
+
+# Print cleaned flights_df
+```{r}
+head(flights_df)
+```
+
+## Traffic Information - Check no. of incoming and outgoing flights from LAX
+
+
+```{r}
+total_incoming_flights <- table(flights_df$DESTINATION_AIRPORT)["LAX"][[1]]
+total_outgoing_flights <- table(flights_df$ORIGIN_AIRPORT)["LAX"][[1]]
+df <- data.frame(direction = c("Incoming", "Outgoing"), 
+                 no_of_flights = c(total_incoming_flights, total_outgoing_flights))
+p <- ggplot(data = df, aes(x = direction, y = no_of_flights, fill = direction)) +
+    xlab("All time") + ylab("No. of flights") +
+    ggtitle("All time traffic stats for LAX airport") +
+    geom_bar(stat = "identity", width = 0.5) + 
+    geom_text(aes(label = no_of_flights), vjust = -0.3, size = 3.5) + 
+    theme_minimal()
+p
+```
+
+
+```{r}
+monthly_flights <- c()
+for(month in 1:length(month.name)) {
+  incoming_flights <- nrow(subset(flights_df, MONTH == month & DESTINATION_AIRPORT == "LAX"))
+  outgoing_flights <- nrow(subset(flights_df, MONTH == month & ORIGIN_AIRPORT == "LAX"))
+  monthly_flights <- c(monthly_flights, c(incoming_flights, outgoing_flights))
+}
+monthly_labels <- as.vector(rbind(month.name, month.name))
+directions <- rep(c("Incoming", "Outgoing"), length(month.name))
+df <- data.frame(monthly_labels, directions, monthly_flights)
+# To prevent ggplot from sorting the x-axis alphabetically
+df$monthly_labels <- as.character(df$monthly_labels)
+df$monthly_labels <- factor(df$monthly_labels, levels = unique(df$monthly_labels))
+p <- ggplot(data = df, aes(x = monthly_labels, y = monthly_flights, fill = directions)) +
+    xlab("Month") + ylab("No. of flights") +
+    ggtitle("Monthly traffic stats for LAX airport") +
+    geom_bar(stat = "identity", width = 0.5, position = "dodge") + 
+    theme_minimal()
+p
+```
+
+
+
+```{r}
+day_labels <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+# Since LAX was not operational on October
+no_of_weeks <- 49 
+day_flights <- c()
+for(day in 1:length(day_labels)) {
+  incoming_flights <- nrow(subset(flights_df, DAY_OF_WEEK == day & DESTINATION_AIRPORT == "LAX"))
+  outgoing_flights <- nrow(subset(flights_df, DAY_OF_WEEK == day & ORIGIN_AIRPORT == "LAX"))
+  day_flights <- c(day_flights, c(incoming_flights / no_of_weeks, outgoing_flights / no_of_weeks))
+}
+directions <- rep(c("Incoming", "Outgoing"), length(day_labels))
+day_labels <- as.vector(rbind(day_labels, day_labels))
+df <- data.frame(day_labels, directions, day_flights)
+# To prevent ggplot from sorting the x-axis alphabetically
+df$day_labels <- as.character(df$day_labels)
+df$day_labels <- factor(df$day_labels, levels = unique(df$day_labels))
+p <- ggplot(data = df, aes(x = day_labels, y = day_flights, fill = directions)) +
+    xlab("Day") + ylab("No. of flights") +
+    ggtitle("Average weekday traffic stats for LAX airport") +
+    geom_bar(stat = "identity", width = 0.5, position = "dodge") + 
+    theme_minimal()
+p
+```
+
+
+
+
+```{r}
+plot_hourly_traffic_for_particular_day <- function(day, month) {
+  
+  day_labels <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+  hourly_flights <- c()
+  for(hour in 0:23) {
+    incoming_flights <- nrow(subset(flights_df, hours(DEPARTURE_TIME) == hour & DAY == day & MONTH == month, DESTINATION_AIRPORT == "LAX"))
+    outgoing_flights <- nrow(subset(flights_df, hours(ARRIVAL_TIME) == hour & DAY == day & MONTH == month, ORIGIN_AIRPORT == "LAX"))
+    hourly_flights <- c(hourly_flights, c(incoming_flights, outgoing_flights))
+  }
+  
+  directions <- rep(c("Incoming", "Outgoing"), length(hourly_flights) / 2)
+  hour_labels <- as.vector(rbind(seq(from = 0, to = 23), seq(from = 0, to = 23)))
+  
+  df <- data.frame(hour_labels, directions, hourly_flights)
+  
+  p <- ggplot(data = df, aes(x = hour_labels, y = hourly_flights, fill = directions)) +
+      xlab("Hour of day") + ylab("No. of flights") +
+      ggtitle("Stats for a particular day") +
+      geom_bar(stat = "identity", width = 0.5, position = "dodge") + 
+      theme_minimal()
+  
+  p
+}
+```
+
+
+```{r}
+plot_hourly_traffic_for_particular_day(day = 30, month = 8)
+```
+
+### Line plots of hourly traffic information from Monday-Sunday
+
+```{r}
+plot_hourly_line_traffic_by_day <- function(day_of_week) {
+  
+  day_labels <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+  
+  # Since LAX was not operational on October
+  no_of_weeks <- 49
+  hourly_flights <- c()
+  hourly_incoming_flights <- c()
+  hourly_outgoing_flights <- c()
+  for(hour in 0:23) {
+    incoming_flights <- nrow(subset(flights_df, hours(DEPARTURE_TIME) == hour & DAY_OF_WEEK == day_of_week & DESTINATION_AIRPORT == "LAX"))
+    outgoing_flights <- nrow(subset(flights_df, hours(ARRIVAL_TIME) == hour & DAY_OF_WEEK == day_of_week & ORIGIN_AIRPORT == "LAX"))
+    hourly_incoming_flights <- c(hourly_incoming_flights, incoming_flights / no_of_weeks)
+    hourly_outgoing_flights <- c(hourly_outgoing_flights, outgoing_flights / no_of_weeks)
+  }
+  
+  directions <- rep(c("Incoming", "Outgoing"), length(hourly_flights) / 2)
+  hour_labels <- seq(from = 0, to = 23)
+  
+  # df <- data.frame(hour_labels, directions, hourly_flights)
+  
+p <- ggplot() +
+    xlab("Hour of Day") + ylab("No. of flights") +
+    ggtitle(day_labels[day_of_week]) +
+    geom_line(aes(x = hour_labels, y = hourly_incoming_flights, group = 1), color = "brown1") +
+    geom_line(aes(x = hour_labels, y = hourly_outgoing_flights, group = 2), color = "lightseagreen") +
+    theme_minimal()
+  
+  p
+}
+```
+
+
+
+```{r}
+plot_hourly_line_traffic_by_day(1)
+```
+
+
+```{r}
+plot_hourly_line_traffic_by_day(2)
+```
+
+
+```{r}
+plot_hourly_line_traffic_by_day(3)
+```
+
+
+```{r}
+plot_hourly_line_traffic_by_day(4)
+```
+
+
+```{r}
+plot_hourly_line_traffic_by_day(5)
+```
+
+
+```{r}
+plot_hourly_line_traffic_by_day(6)
+```
+
+
+```{r}
+plot_hourly_line_traffic_by_day(7)
+```
+
+
+# Cancellation Reason
+
+#### Visualize Flight Cancellation Reason
+
+```{r}
+cancleData<- subset(flights_df, CANCELLED == 1, select = c(AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,CANCELLATION_REASON))
+ 
+ggplot(cancleData, aes(x=AIRLINE, fill = CANCELLATION_REASON)) + geom_bar(position = "dodge") + labs(title="Cancellations\n", x="Airline",y="Count") + theme_bw()
+
+```
+
+# Analysing Arrival Delay
+Variable 'Arrival Delay' is directly proportional to [Departure Delay] and delay occured while covering the distance WheelsOFF and WheelsIN.
+
+Its calculated by DELAY_IN_AIR = ELAPSED_TIME - SCHEDULED_TIME
+
+```{r}
+flights_df_t <- transform(flights_df,DELAY_IN_AIR= ELAPSED_TIME -SCHEDULED_TIME)%>% select(c(1:17),DELAY_IN_AIR, everything())
+delayBreakDown <- subset(flights_df_t, ARRIVAL_DELAY > 0, select = c(AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,DEPARTURE_DELAY,DELAY_IN_AIR,ARRIVAL_DELAY))
+head(delayBreakDown)
+```
+
+## Calculate the mean of all the delays
+```{r}
+MeanDelays <- group_by(flights_df,AIRLINE) %>% summarise(Mean_DEPARTURE_DELAY= mean(DEPARTURE_DELAY,na.rm = TRUE),
+                                                         Mean_ARRIVAL_DELAY=mean(ARRIVAL_DELAY,na.rm = TRUE),
+                                                         Mean_AIR_SYSTEM_DELAY=mean(AIR_SYSTEM_DELAY,na.rm = TRUE),
+                                                         Mean_SECURITY_DELAY=mean(SECURITY_DELAY,na.rm = TRUE),
+                                                         Mean_AIRLINE_DELAY=mean(AIRLINE_DELAY,na.rm = TRUE),
+                                                         Mean_LATE_AIRCRAFT_DELAY=mean(LATE_AIRCRAFT_DELAY,na.rm = TRUE),
+                                                         Mean_WEATHER_DELAY=mean(WEATHER_DELAY,na.rm = TRUE))
+library(reshape2)
+melt_MeanDelays <- melt(data=MeanDelays,id.vars = 'AIRLINE', measure.vars = c('Mean_AIR_SYSTEM_DELAY','Mean_SECURITY_DELAY','Mean_AIRLINE_DELAY','Mean_LATE_AIRCRAFT_DELAY','Mean_WEATHER_DELAY'))
+head(MeanDelays)
+```
+
+## Delay Distribution w.r.t to type of delays of various Airlines 
+
+```{r}
+ggplot(melt_MeanDelays , aes(x=AIRLINE, y=value, fill=variable)) + geom_bar(stat='identity', position='dodge') + theme_bw()
+```
+
+From the above plot, Airline ´HA´ and ´MQ´ are the highest among the AIRLINE DELAY and majority of the delays in Airline ´HA´ is due to Airline Delay.
+
+```{r}
+ggplot(data = flights_df, mapping = aes(x = AIRLINE, y = ARRIVAL_DELAY)) +  geom_point(position = "jitter", aes(color=AIRLINE)) + labs(title="Arrival Delay Distribution for all Airlines\n") + theme_bw()
+```
+
+The Flights from Airline AA were delayed by more than 1500 sec
+
+## Pattern of Mean Departure Delay and Arrival Delay of various AIRLINE
+
+```{r}
+melt(data=MeanDelays,id.vars = 'AIRLINE', measure.vars = c('Mean_DEPARTURE_DELAY','Mean_ARRIVAL_DELAY')) %>% ggplot() + geom_bar(aes(x=AIRLINE, y=value, fill=variable),stat="identity",position='dodge') + theme_bw()
+```
+
+#### The AIRLINE `AS` and `HA` have negative mean ARRIVAL Delay, that show these AIRLINE even departure Late from schedule departure Time can make the time by covering the distance at faster speed 
+
+#### The AIRLINE `MQ` and `NK` have average Departure Delay and Arrival Delay is close around 20 mins 
+
+### From Above Plot, one can conclude:
+
+## Analysing Arrival Delay contd.
+
+```{r}
+ARRIVAL_DELAY_PiE<- summarise(delayBreakDown,DEPARTURE_DELAY=mean(DEPARTURE_DELAY,na.rm = T),DELAY_IN_AIR=mean(DELAY_IN_AIR,na.rm = T))
+ARRIVAL_DELAY_PiE <- melt(data = ARRIVAL_DELAY_PiE)
+ARRIVAL_DELAY_PiE <- mutate(ARRIVAL_DELAY_PiE, Percentage = value / sum(value)*100)
+ARRIVAL_DELAY_PiE <- ARRIVAL_DELAY_PiE %>% mutate_at(vars(Percentage), funs(round(., 2)))
+```
+## ARRIVAL_DELAY 
+
+```{r}
+ggplot(ARRIVAL_DELAY_PiE,aes(x="",y=Percentage,fill=variable)) +  geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + geom_text(aes(label = paste0(round(Percentage), "%")), position = position_stack(vjust = 0.5))+ theme_void()
+```
+
+ARRIVAL_DELAY is composed of DEPARTURE_DELAY and DELAY_IN_AIR
+
+Hence from pie chart show that DEPARTURE_DELAY is the major component.
+Next, we find what leads to DEPARTURE_DELAY and DELAY_IN_AIR.
+
+
+## Average type of delays
+
+Delays are divided into three categories, namely "on time or small delay" (up to 15 minutes delay), "Medium delay" (15 – 45 minutes delay) and "Large delay" ( 45 minutes delay). In this way the graphic representation is more understandable as well as the possibility of directly comparing the variables related with delays.
+
+```{r}
+delayBreakDownAll <- subset(flights_df_t, CANCELLED == 0 & DIVERTED == 0, select = c(AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,ORIGIN_AIRPORT,DESTINATION_AIRPORT,DEPARTURE_DELAY,DELAY_IN_AIR,ARRIVAL_DELAY,AIR_SYSTEM_DELAY,SECURITY_DELAY,AIRLINE_DELAY,LATE_AIRCRAFT_DELAY,WEATHER_DELAY))
+delayBreakDownAll$categorize_Delay[delayBreakDownAll$ARRIVAL_DELAY<15]<- 'On_Time_Or_Small_Delay'
+delayBreakDownAll$categorize_Delay[delayBreakDownAll$ARRIVAL_DELAY>=15 & delayBreakDownAll$ARRIVAL_DELAY<45]<- 'Medium_Delay'
+delayBreakDownAll$categorize_Delay[delayBreakDownAll$ARRIVAL_DELAY>=45]<- 'Large_Delay'
+delayBreakDownAll$categorize_Delay<-as.factor(delayBreakDownAll$categorize_Delay)
+```
+
+## Average type of delays Of various Airline
+
+```{r}
+ggplot(data = delayBreakDownAll) +  geom_bar(mapping = aes(x=AIRLINE, fill= categorize_Delay), position = "fill") + coord_flip()
+```
+
+## One might assume that, busier routes have more cancellations. We found that to be false.
+
+```{r}
+Inflights <- flights_df %>%
+  filter(flights_df$DESTINATION_AIRPORT == "LAX")    #------------------------Incoming flights
+Outflights <- flights_df %>%
+  filter(flights_df$ORIGIN_AIRPORT == "LAX")           #------------------------- Outgoing flights
+```
+
+## Airlines cancelled from  origin and destination airports
+
+```{r}
+ggplot(Outflights, aes(Outflights$DESTINATION_AIRPORT, Outflights$CANCELLED,color=Outflights$AIRLINE, fill=Outflights$AIRLINE)) +
+  geom_bar(stat="identity") + labs(x = "Destination Airport", y ="Count of cancelled flights")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggplot(Inflights, aes(Inflights$ORIGIN_AIRPORT, Inflights$CANCELLED,color=Inflights$AIRLINE, fill=Inflights$AIRLINE)) +
+  geom_bar(stat="identity") + labs(x = "Origin Airport", y ="Count of cancelled flights")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r}
+cancleData_Route<- subset(flights_df, CANCELLED == 1, select = c(AIRLINE,ORIGIN_AIRPORT,DESTINATION_AIRPORT,FLIGHT_NUMBER,TAIL_NUMBER,CANCELLATION_REASON))
+cancleData_Route$ROUTE<- paste(cancleData_Route$ORIGIN_AIRPORT,"-",cancleData_Route$DESTINATION_AIRPORT)
+```
+  
+### Now we are checking the top 5 cancellation routes
+
+```{r}
+top5cancellation_route<- subset(cancleData_Route,ROUTE=="LAX - SFO"  | ROUTE=='SFO - LAX'| ROUTE=='LAX - OAK' | ROUTE == 'OAK - LAX' | ROUTE == 'SJC - LAX')
+ggplot(data=top5cancellation_route)+xlab( "ROUTES FROM ORIGIN TO DESTINATION AIRPORT") + ylab("NO OF COUNTS FOR THE CANCELLATION_REASON") +ggtitle("TOP 5 CANCELLATION ROUTES")+geom_bar(mapping = aes(x=ROUTE,fill=CANCELLATION_REASON),position = 'dodge')
+```
+
+### The plot below shows the top 10 busy routes and their cancellation reasons
+
+```{r}
+cancleData_Route<- subset(flights_df, CANCELLED == 1, select = c(AIRLINE,ORIGIN_AIRPORT,DESTINATION_AIRPORT,FLIGHT_NUMBER,TAIL_NUMBER,CANCELLATION_REASON))
+cancleData_Route$ROUTE<- paste(cancleData_Route$ORIGIN_AIRPORT,"-",cancleData_Route$DESTINATION_AIRPORT)
+top5_busyroute<- subset(cancleData_Route,ROUTE=='ABQ - LAX' | ROUTE=='ASE - LAX'| ROUTE=='ATL - LAX' | ROUTE == 'LAX - SFO' | ROUTE == 'SJC - LAX')
+ggplot(data=top5_busyroute)+xlab( "ROUTES FROM ORIGIN TO DESTINATION AIRPORT") + ylab("NO OF COUNTS FOR THE CANCELLATION_REASON") +
+ggtitle("TOP 5 BUSY ROUTES")+geom_bar(mapping = aes(x=ROUTE,fill=CANCELLATION_REASON),position = 'dodge')
+```
+
+### Hence, contrary to our assumption, the flights which are cancelled are not the one which are on the busy route
+
+
+# Now we visualize Airline and delay data to find the best and worst performing airline
+
+
+```{r include=TRUE}
+
+ggplot(flights_df, aes(AIRLINE,DEPARTURE_DELAY)) + geom_point(aes(color=AIRLINE)) + labs(title="Airlines plotted with their Departure Delay", x="Airline",y="Departure Delay")+ theme_bw()
+
+ggplot(flights_df, aes(AIRLINE,ARRIVAL_DELAY)) + geom_point(aes(color=AIRLINE)) + labs(title="Airlines plotted with their Arrival Delay", x="Airline",y="Arrival Delay")+ theme_bw()
+```
+
+
+
+According to these two visualizations, 
+
+**Worst Performing Airline:** AA - It consistently delays a lot of its flights and as a result, arrives late at the destination (Arrival_time) (assume that arrival delay is set excluding the time zone variations) 
+
+**Best Performing Airline:** MQ – Doesn’t delay a lot of it’s flights and doesn’t have a lot of arrival delays
+
+**But is this a fair comparison?**
+  
+
+
+### NOT A FAIR COMPARISON – WHY?
+
+This doesn’t seem like to a fair comparison since AA might have been used in a lot of routes whereas MQ might have been used only in a few routes. Our guess turned out to be true.
+
+```{r}
+ggplot(flights_df, aes(AIRLINE)) + geom_bar(aes(fill=AIRLINE)) + labs(title="Number of times each Airline is used\n", x='Airline', y='Number of times used') + theme_bw()
+```
+
+## Count of Airline 'AA' and 'MQ'
+
+```{r echo = TRUE}
+count(flights_df %>% group_by(AIRLINE) %>% filter(AIRLINE=="AA"))
+
+count(flights_df %>% group_by(AIRLINE) %>% filter(AIRLINE=="MQ"))
+```
+
+One interesting trend is that, among the Airlines that are the most used (AA, DL, OO, UA, WN) WN has the lowest delays and can be said to be the best airline.
+
+Let’s investigate further into why AA is the worst airline and show that: 
+
+# The more the number of busy routes that an airline operates, the worse the airline in terms of delay
+
+
+First, we find the TOP 10 MOST USED/BUSY routes in the dataset.
+
+find the 161 unique routes between the origin and destination airports and we get the count (number of times) of each unique route being used.
+
+```{r echo=TRUE}
+count(flights_df %>% group_by(ORIGIN_AIRPORT,DESTINATION_AIRPORT) %>% filter(ORIGIN_AIRPORT == unique(ORIGIN_AIRPORT) & DESTINATION_AIRPORT == unique(DESTINATION_AIRPORT)))
+```
+
+
+Put this into a new data frame named ‘popular_routes’ for easier manipulation
+
+```{r echo=TRUE}
+popular_routes <- count(flights_df %>% group_by(ORIGIN_AIRPORT,DESTINATION_AIRPORT) %>% filter(ORIGIN_AIRPORT == unique(ORIGIN_AIRPORT) & DESTINATION_AIRPORT == unique(DESTINATION_AIRPORT)))
+```
+
+Merge Origin and Destination column into a new column called ‘Route’ and move it to first 
+
+```{r echo=TRUE}
+popular_routes$ROUTE <- paste(popular_routes$ORIGIN_AIRPORT,"-",popular_routes$DESTINATION_AIRPORT)
+popular_routes$ORIGIN_AIRPORT <- NULL
+popular_routes$DESTINATION_AIRPORT <- NULL
+popular_routes <- popular_routes[,c(2,1)]
+```
+
+
+We take note of the top 10 most used routes and see that SFO - LAX is the most used route.
+
+```{r echo=TRUE}
+head(popular_routes %>% group_by(n) %>% arrange(desc(n)),10)
+```
+
+
+Plot the Top 10 most used routes
+
+```{r echo=TRUE}
+ggplot(head(popular_routes %>% group_by(n) %>% arrange(desc(n)),10), aes(ROUTE,n)) + geom_bar(stat='identity', aes(fill=ROUTE)) + labs(title="Top 10 used routes by all Airlines\n", x="Route",y="Number of times used")+ theme_bw()
+```
+
+Now, that we have the top 10 routes, find the unique routes of AA and it’s count
+
+```{r echo=TRUE}
+count(flights_df %>% group_by(AIRLINE,ORIGIN_AIRPORT,DESTINATION_AIRPORT) %>% filter(ORIGIN_AIRPORT == unique(ORIGIN_AIRPORT) & DESTINATION_AIRPORT == unique(DESTINATION_AIRPORT) & AIRLINE == "AA"))
+```
+ 
+We get 60 unique routes of AA and we find the top 10 most used routes by AA
+
+```{r echo=TRUE}
+head(count(flights_df %>% group_by(AIRLINE,ORIGIN_AIRPORT,DESTINATION_AIRPORT) %>% filter(ORIGIN_AIRPORT == unique(ORIGIN_AIRPORT) & DESTINATION_AIRPORT == unique(DESTINATION_AIRPORT) & AIRLINE == "AA")) %>% arrange(desc(n)),10)
+```
+
+Put this into a new data frame named ‘AA_routes’ for easier manipulation, merge origin and destination column into a new column called 'Route' (same as popular_routes df)
+
+```{r echo=TRUE}
+AA_routes <- count(flights_df %>% group_by(ORIGIN_AIRPORT,DESTINATION_AIRPORT) %>% filter(ORIGIN_AIRPORT == unique(ORIGIN_AIRPORT) & DESTINATION_AIRPORT == unique(DESTINATION_AIRPORT) & AIRLINE == "AA"))
+```
+
+Merge Origin and Destination column into a new column called ‘Route’ and move it to first 
+
+```{r echo=TRUE}
+AA_routes$ROUTE <- paste(AA_routes$ORIGIN_AIRPORT,"-",AA_routes$DESTINATION_AIRPORT)
+AA_routes$ORIGIN_AIRPORT <- NULL
+AA_routes$DESTINATION_AIRPORT <- NULL
+AA_routes <- AA_routes[,c(2,1)]
+```
+
+Plot the Routes for Airline "AA" 
+
+```{r echo=TRUE}
+ggplot(head(AA_routes %>% group_by(n) %>% arrange(desc(n)),10), aes(ROUTE,n)) + geom_bar(stat='identity', aes(fill=ROUTE)) + labs(title="Top 10 used routes by AA\n", x="Route",y="Number of times used")+ theme_bw()
+```
+
+We can infer from 2 plots that 6 of the top 10 most used routes by AA is the same as the top 10 most used routes by all airlines. So, AA runs on busy routes and this causes delay in it’s flights due to other factors like the number of passengers etc.
+
+# Also, 'The Busier the route, the more the Delay'
+
+### Data Manipulation:
+
+Find the mean average and departure delay for each unique route in the dataset
+```{r}
+popular_routes2 <- count(flights_df %>% group_by(ORIGIN_AIRPORT,DESTINATION_AIRPORT,ARRIVAL_DELAY,DEPARTURE_DELAY) %>% filter(ORIGIN_AIRPORT == unique(ORIGIN_AIRPORT) & DESTINATION_AIRPORT == unique(DESTINATION_AIRPORT) & ARRIVAL_DELAY == mean(ARRIVAL_DELAY) & DEPARTURE_DELAY == mean(DEPARTURE_DELAY)))
+```
+
+Merge the origin and destination airport columns to get the ‘ROUTE’ column, similar to how we did with popular routes
+```{r}
+popular_routes2$ROUTE <- paste(popular_routes2$ORIGIN_AIRPORT,"-",popular_routes2$DESTINATION_AIRPORT)
+popular_routes2$ORIGIN_AIRPORT <- NULL
+popular_routes2$DESTINATION_AIRPORT <- NULL
+
+```
+
+Calculate the mean of ARRIVAL_DELAY and DEPARTURE_DELAY by group of ROUTE
+```{r}
+popular_routes2 <- setDT(popular_routes2)[ , .(ARRIVAL_DELAY = mean(ARRIVAL_DELAY), DEPARTURE_DELAY = mean(DEPARTURE_DELAY)), by = ROUTE]
+```
+
+Take the top 10 routes where the arrival and departure delay is the highest
+
+```{r}
+head(popular_routes2[order(ARRIVAL_DELAY,DEPARTURE_DELAY,-ROUTE,decreasing=TRUE),],10)
+```
+
+### Visualization: 
+
+Plot the top 10 routes with highest arrival delay
+
+```{r}
+ggplot(head(popular_routes2[order(ARRIVAL_DELAY,DEPARTURE_DELAY,-ROUTE,decreasing=TRUE),],10), aes(ROUTE,ARRIVAL_DELAY)) + geom_bar(stat='identity',aes(fill=ROUTE)) + labs(title="Top 10 routes with highest arrival delay\n", x="Route",y="Arrival Delay") + theme_bw()
+```
+
+```{r}
+ggplot(head(popular_routes2[order(ARRIVAL_DELAY,DEPARTURE_DELAY,-ROUTE,decreasing=TRUE),],10), aes(ROUTE,DEPARTURE_DELAY)) + geom_bar(stat='identity',aes(fill=ROUTE)) + labs(title="Top 10 routes with highest departure delay\n", x="Route",y="Departure Delay") + theme_bw()
+```
+
+#### We find that 9 of the routes in these top 10 belong to top 20 busy routes.
+
+
+
+

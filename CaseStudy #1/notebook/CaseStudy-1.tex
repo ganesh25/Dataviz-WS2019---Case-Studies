@@ -1,0 +1,745 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Data Analysis and Visualization in R - CaseStudy I},
+            pdfauthor={Ganesh Chandrasekaran, Chandramohan Sudar, Mohammad Shaukat, Aditi Deshpande},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Data Analysis and Visualization in R - CaseStudy I}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Ganesh Chandrasekaran, Chandramohan Sudar, Mohammad Shaukat, Aditi
+Deshpande}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{11 Dezember 2019}
+
+
+\begin{document}
+\maketitle
+
+\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+
+\hypertarget{add-libraries}{%
+\section{Add libraries}\label{add-libraries}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(stringr) }\CommentTok{# String operations}
+\KeywordTok{library}\NormalTok{(chron) }\CommentTok{# Time operations}
+\KeywordTok{library}\NormalTok{(ggplot2) }\CommentTok{# Plotting}
+\KeywordTok{library}\NormalTok{(plyr) }\CommentTok{# Data Manipulation}
+\KeywordTok{library}\NormalTok{(dplyr) }\CommentTok{# Splitting Applying Combining Data}
+\KeywordTok{library}\NormalTok{(tidyverse) }\CommentTok{#Melting purpose}
+\KeywordTok{library}\NormalTok{(reshape2)}
+\KeywordTok{library}\NormalTok{(data.table) }\CommentTok{# for setDT}
+\KeywordTok{library}\NormalTok{(tinytex)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{read-the-datasets}{%
+\section{Read the datasets}\label{read-the-datasets}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{airlines_df <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"../datasets/airlines.csv"}\NormalTok{)}
+\NormalTok{airports_df <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"../datasets/airports.csv"}\NormalTok{)}
+\NormalTok{flights_df <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"../datasets/flightsLAX.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+
+\hypertarget{print-flights_df}{%
+\section{Print flights\_df}\label{print-flights_df}}
+
+\begin{verbatim}
+##   YEAR MONTH DAY DAY_OF_WEEK AIRLINE FLIGHT_NUMBER TAIL_NUMBER
+## 1 2015     1   1           4      AA          2336      N3KUAA
+## 2 2015     1   1           4      AA           258      N3HYAA
+## 3 2015     1   1           4      US          2013      N584UW
+## 4 2015     1   1           4      DL          1434      N547US
+## 5 2015     1   1           4      AA           115      N3CTAA
+## 6 2015     1   1           4      UA          1545      N76517
+##   ORIGIN_AIRPORT DESTINATION_AIRPORT SCHEDULED_DEPARTURE DEPARTURE_TIME
+## 1            LAX                 PBI                  10              2
+## 2            LAX                 MIA                  20             15
+## 3            LAX                 CLT                  30             44
+## 4            LAX                 MSP                  35             35
+## 5            LAX                 MIA                 105            103
+## 6            LAX                 IAH                 115            112
+##   DEPARTURE_DELAY TAXI_OUT WHEELS_OFF SCHEDULED_TIME ELAPSED_TIME AIR_TIME
+## 1              -8       12         14            280          279      263
+## 2              -5       15         30            285          281      258
+## 3              14       13         57            273          249      228
+## 4               0       18         53            214          210      188
+## 5              -2       14        117            286          276      255
+## 6              -3       11        123            183          175      156
+##   DISTANCE WHEELS_ON TAXI_IN SCHEDULED_ARRIVAL ARRIVAL_TIME ARRIVAL_DELAY
+## 1     2330       737       4               750          741            -9
+## 2     2342       748       8               805          756            -9
+## 3     2125       745       8               803          753           -10
+## 4     1535       601       4               609          605            -4
+## 5     2342       832       7               851          839           -12
+## 6     1379       559       8               618          607           -11
+##   DIVERTED CANCELLED CANCELLATION_REASON AIR_SYSTEM_DELAY SECURITY_DELAY
+## 1        0         0                                   NA             NA
+## 2        0         0                                   NA             NA
+## 3        0         0                                   NA             NA
+## 4        0         0                                   NA             NA
+## 5        0         0                                   NA             NA
+## 6        0         0                                   NA             NA
+##   AIRLINE_DELAY LATE_AIRCRAFT_DELAY WEATHER_DELAY
+## 1            NA                  NA            NA
+## 2            NA                  NA            NA
+## 3            NA                  NA            NA
+## 4            NA                  NA            NA
+## 5            NA                  NA            NA
+## 6            NA                  NA            NA
+\end{verbatim}
+
+\hypertarget{data-cleaning-convert-time-columns-to-the-time-format}{%
+\section{Data Cleaning: Convert time columns to the time
+format}\label{data-cleaning-convert-time-columns-to-the-time-format}}
+
+Use pad and gsub to convert the time columns to correct time format
+
+\hypertarget{print-cleaned-flights_df}{%
+\section{Print cleaned flights\_df}\label{print-cleaned-flights_df}}
+
+\begin{verbatim}
+##   YEAR MONTH DAY DAY_OF_WEEK AIRLINE FLIGHT_NUMBER TAIL_NUMBER
+## 1 2015     1   1           4      AA          2336      N3KUAA
+## 2 2015     1   1           4      AA           258      N3HYAA
+## 3 2015     1   1           4      US          2013      N584UW
+## 4 2015     1   1           4      DL          1434      N547US
+## 5 2015     1   1           4      AA           115      N3CTAA
+## 6 2015     1   1           4      UA          1545      N76517
+##   ORIGIN_AIRPORT DESTINATION_AIRPORT SCHEDULED_DEPARTURE DEPARTURE_TIME
+## 1            LAX                 PBI            00:10:00       00:02:00
+## 2            LAX                 MIA            00:20:00       00:15:00
+## 3            LAX                 CLT            00:30:00       00:44:00
+## 4            LAX                 MSP            00:35:00       00:35:00
+## 5            LAX                 MIA            01:05:00       01:03:00
+## 6            LAX                 IAH            01:15:00       01:12:00
+##   DEPARTURE_DELAY TAXI_OUT WHEELS_OFF SCHEDULED_TIME ELAPSED_TIME AIR_TIME
+## 1              -8       12         14            280          279      263
+## 2              -5       15         30            285          281      258
+## 3              14       13         57            273          249      228
+## 4               0       18         53            214          210      188
+## 5              -2       14        117            286          276      255
+## 6              -3       11        123            183          175      156
+##   DISTANCE WHEELS_ON TAXI_IN SCHEDULED_ARRIVAL ARRIVAL_TIME ARRIVAL_DELAY
+## 1     2330       737       4          07:50:00     07:41:00            -9
+## 2     2342       748       8          08:05:00     07:56:00            -9
+## 3     2125       745       8          08:03:00     07:53:00           -10
+## 4     1535       601       4          06:09:00     06:05:00            -4
+## 5     2342       832       7          08:51:00     08:39:00           -12
+## 6     1379       559       8          06:18:00     06:07:00           -11
+##   DIVERTED CANCELLED CANCELLATION_REASON AIR_SYSTEM_DELAY SECURITY_DELAY
+## 1        0         0                                   NA             NA
+## 2        0         0                                   NA             NA
+## 3        0         0                                   NA             NA
+## 4        0         0                                   NA             NA
+## 5        0         0                                   NA             NA
+## 6        0         0                                   NA             NA
+##   AIRLINE_DELAY LATE_AIRCRAFT_DELAY WEATHER_DELAY
+## 1            NA                  NA            NA
+## 2            NA                  NA            NA
+## 3            NA                  NA            NA
+## 4            NA                  NA            NA
+## 5            NA                  NA            NA
+## 6            NA                  NA            NA
+\end{verbatim}
+
+\hypertarget{chandrus-work}{%
+\section{Chandru's Work}\label{chandrus-work}}
+
+\hypertarget{traffic-information---check-no.-of-incoming-and-outgoing-flights-from-lax}{%
+\paragraph{Traffic Information - Check no. of incoming and outgoing
+flights from
+LAX}\label{traffic-information---check-no.-of-incoming-and-outgoing-flights-from-lax}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+\hypertarget{line-plots-of-hourly-traffic-information-from-monday-sunday}{%
+\subsubsection{Line plots of hourly traffic information from
+Monday-Sunday}\label{line-plots-of-hourly-traffic-information-from-monday-sunday}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-15-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-18-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-19-1.pdf}
+
+\hypertarget{shaukat}{%
+\section{Shaukat}\label{shaukat}}
+
+\hypertarget{cancellation-reason}{%
+\section{Cancellation reason}\label{cancellation-reason}}
+
+\hypertarget{visualize-flight-cancellation-reason}{%
+\paragraph{Visualize Flight Cancellation
+Reason}\label{visualize-flight-cancellation-reason}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-20-1.pdf}
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-20-2.pdf}
+
+\hypertarget{analysing-arrival-delay}{%
+\section{Analysing Arrival Delay}\label{analysing-arrival-delay}}
+
+Variable `Arrival Delay' is directly proportional to {[}Departure
+Delay{]} and delay occured while covering the distance WheelsOFF and
+WheelsIN Its calculated by DELAY\_IN\_AIR = ELAPSED\_TIME -
+SCHEDULED\_TIME
+
+\begin{verbatim}
+##    AIRLINE FLIGHT_NUMBER TAIL_NUMBER DEPARTURE_DELAY DELAY_IN_AIR
+## 9       OO          2599      N435SW              73          -17
+## 12      AA          2410      N3BAAA              10           -8
+## 13      UA          1222      N68452               2            2
+## 23      OO          5242      N744SK              39           -9
+## 24      OO          5466      N568SW              54           34
+## 28      OO          5181      N788SK              -3           12
+##    ARRIVAL_DELAY
+## 9             56
+## 12             2
+## 13             4
+## 23            30
+## 24            88
+## 28             9
+\end{verbatim}
+
+\hypertarget{calculate-the-mean-of-all-the-delays}{%
+\subsection{Calculate the mean of all the
+delays}\label{calculate-the-mean-of-all-the-delays}}
+
+\begin{verbatim}
+## # A tibble: 6 x 8
+##   AIRLINE Mean_DEPARTURE_~ Mean_ARRIVAL_DE~ Mean_AIR_SYSTEM~
+##   <fct>              <dbl>            <dbl>            <dbl>
+## 1 AA                  8.76            1.99            14.4  
+## 2 AS                  2.37           -0.696           18.7  
+## 3 B6                 10.6             2.31            18.3  
+## 4 DL                 10.2             3.20            12.7  
+## 5 F9                 11.7            10.5             24.3  
+## 6 HA                  2.92           -1.27             0.486
+## # ... with 4 more variables: Mean_SECURITY_DELAY <dbl>,
+## #   Mean_AIRLINE_DELAY <dbl>, Mean_LATE_AIRCRAFT_DELAY <dbl>,
+## #   Mean_WEATHER_DELAY <dbl>
+\end{verbatim}
+
+\hypertarget{delay-distribution-w.r.t-to-type-of-delays-of-various-airline}{%
+\subsection{Delay Distribution w.r.t to type of delays of various
+AIRLINE}\label{delay-distribution-w.r.t-to-type-of-delays-of-various-airline}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-23-1.pdf}
+
+From the above plot, Airline ´HA´ and ´MQ´ are the higest among the
+AIRLINE DELAY
+
+And majority of delays in Airline ´HA´ is due to AIRLINE DELAY**
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-24-1.pdf}
+
+Above plot show ARRIVAL DELAY Distribution for all the AirLines
+
+The Flights from Airline \texttt{AA} were delayed for more than 1500 sec
+
+\hypertarget{patern-of-mean-departure-delay-and-arrival-delay-of-various-airline}{%
+\subsection{Patern of Mean Departure Delay and Arrival Delay of various
+AIRLINE}\label{patern-of-mean-departure-delay-and-arrival-delay-of-various-airline}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-25-1.pdf}
+
+The AIRLINE \texttt{AS} and \texttt{HA} have negative mean ARRIVAL
+Delay, that show these AIRLINE even depature Late from schedule
+departure Time can make the time by covering the distance at faster
+speed
+
+The AIRLINE \texttt{MQ} and \texttt{NK} have average Departure Delay and
+Arrival Delay is close around 20 mins
+
+From Above Plot, one can conclude:
+
+\hypertarget{analysing-arrival-delay-contd.}{%
+\subsection{Analysing Arrival Delay
+contd.}\label{analysing-arrival-delay-contd.}}
+
+\hypertarget{arrival_delay}{%
+\subsection{ARRIVAL\_DELAY}\label{arrival_delay}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-27-1.pdf}
+
+ARRIVAL\_DELAY is composed of DEPARTURE\_DELAY and DELAY\_IN\_AIR
+
+Hence from pie chart show that DEPARTURE\_DELAY is the major componet.
+Next is to find what leads to DEPARTURE\_DELAY and DELAY\_IN\_AIR.
+
+\hypertarget{average-type-of-delays}{%
+\subsection{Average type of delays}\label{average-type-of-delays}}
+
+Delays are divided into three categories, namely ``on time or small
+delay'' (up to 15 minutes delay), ``Medium delay'' (15 -- 45 minutes
+delay) and ``Large delay'' ( 45 minutes delay). In this way the graphic
+representation is more understandable as well as the possibility of
+directly comparing the variables related with delays.
+
+\hypertarget{average-type-of-delays-of-various-airline}{%
+\subsection{Average type of delays Of various
+Airline}\label{average-type-of-delays-of-various-airline}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-29-1.pdf}
+
+\hypertarget{aditi}{%
+\section{ADITI}\label{aditi}}
+
+\hypertarget{now-we-are-checking-the-first-top-5-cancellation-route}{%
+\subsubsection{Now we are checking the first top 5 cancellation
+route}\label{now-we-are-checking-the-first-top-5-cancellation-route}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-31-1.pdf}
+
+\hypertarget{from-the-above-graph-we-conclude-that-the-flights-which-are-cancelled-are-not-the-one-which-are-on-the-busy-route}{%
+\subsubsection{From the above graph we conclude that the flights which
+are cancelled are not the one which are on the busy
+route}\label{from-the-above-graph-we-conclude-that-the-flights-which-are-cancelled-are-not-the-one-which-are-on-the-busy-route}}
+
+\hypertarget{ganesh}{%
+\section{Ganesh}\label{ganesh}}
+
+\hypertarget{visualization-of-best-and-worst-performing-airline}{%
+\subsection{Visualization of Best and Worst performing
+airline}\label{visualization-of-best-and-worst-performing-airline}}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-32-1.pdf}
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-32-2.pdf}
+
+According to these two visualizations,
+
+\textbf{Worst Performing Airline:} AA - It consistently delays a lot of
+its flights and as a result, arrives late at the destination
+(Arrival\_time) (assume that arrival delay is set excluding the time
+zone variations)
+
+\textbf{Best Performing Airline:} MQ -- Doesn't delay a lot of it's
+flights and doesn't have a lot of arrival delays
+
+\textbf{But is this a fair comparison?}
+
+\hypertarget{not-a-fair-comparison-why}{%
+\subsubsection{NOT A FAIR COMPARISON --
+WHY?}\label{not-a-fair-comparison-why}}
+
+But, this doesn't seem like to a fair comparison since AA might have
+been used in a lot of routes whereas MQ might have been used only in a
+few routes. I checked this out and found it to be true.
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-33-1.pdf}
+
+\hypertarget{count-of-airline-aa-and-mq}{%
+\subsection{Count of Airline `AA' and
+`MQ'}\label{count-of-airline-aa-and-mq}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(AIRLINE) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(AIRLINE}\OperatorTok{==}\StringTok{"AA"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 2
+## # Groups:   AIRLINE [1]
+##   AIRLINE     n
+##   <fct>   <int>
+## 1 AA      65483
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(AIRLINE) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(AIRLINE}\OperatorTok{==}\StringTok{"MQ"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 2
+## # Groups:   AIRLINE [1]
+##   AIRLINE     n
+##   <fct>   <int>
+## 1 MQ        368
+\end{verbatim}
+
+One interesting trend is that, among the Airlines that are the most used
+(AA, DL, OO, UA, WN) WN has the lowest delays and can be said to be the
+best airline.
+
+Let's investigate further into why AA is the worst airline and show
+that:
+
+\hypertarget{the-more-the-number-of-busy-routes-that-an-airline-operates-the-worse-the-airline-in-terms-of-delay}{%
+\section{The more the number of busy routes that an airline operates,
+the worse the airline in terms of
+delay}\label{the-more-the-number-of-busy-routes-that-an-airline-operates-the-worse-the-airline-in-terms-of-delay}}
+
+First, we find the TOP 10 MOST USED/BUSY routes in the dataset.
+
+find the 161 unique routes between the origin and destination airports
+and we get the count (number of times) of each unique route being used.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(ORIGIN_AIRPORT,DESTINATION_AIRPORT) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(ORIGIN_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(ORIGIN_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{DESTINATION_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(DESTINATION_AIRPORT)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 161 x 3
+## # Groups:   ORIGIN_AIRPORT, DESTINATION_AIRPORT [161]
+##    ORIGIN_AIRPORT DESTINATION_AIRPORT     n
+##    <fct>          <fct>               <int>
+##  1 ABQ            LAX                  1834
+##  2 ANC            LAX                   382
+##  3 ASE            LAX                   774
+##  4 ATL            LAX                  5669
+##  5 AUS            LAX                  2597
+##  6 BNA            LAX                  1637
+##  7 BOI            LAX                   682
+##  8 BOS            LAX                  4055
+##  9 BWI            LAX                  1115
+## 10 BZN            LAX                   143
+## # ... with 151 more rows
+\end{verbatim}
+
+Put this into a new data frame named `popular\_routes' for easier
+manipulation
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{popular_routes <-}\StringTok{ }\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(ORIGIN_AIRPORT,DESTINATION_AIRPORT) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(ORIGIN_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(ORIGIN_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{DESTINATION_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(DESTINATION_AIRPORT)))}
+\end{Highlighting}
+\end{Shaded}
+
+Merge Origin and Destination column into a new column called `Route' and
+move it to first
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{popular_routes}\OperatorTok{$}\NormalTok{ROUTE <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(popular_routes}\OperatorTok{$}\NormalTok{ORIGIN_AIRPORT,}\StringTok{"-"}\NormalTok{,popular_routes}\OperatorTok{$}\NormalTok{DESTINATION_AIRPORT)}
+\NormalTok{popular_routes}\OperatorTok{$}\NormalTok{ORIGIN_AIRPORT <-}\StringTok{ }\OtherTok{NULL}
+\NormalTok{popular_routes}\OperatorTok{$}\NormalTok{DESTINATION_AIRPORT <-}\StringTok{ }\OtherTok{NULL}
+\NormalTok{popular_routes <-}\StringTok{ }\NormalTok{popular_routes[,}\KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{)]}
+\end{Highlighting}
+\end{Shaded}
+
+We take note of the top 10 most used routes, using the below command:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(popular_routes }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(n) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{arrange}\NormalTok{(}\KeywordTok{desc}\NormalTok{(n)),}\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 10 x 2
+## # Groups:   n [10]
+##    ROUTE         n
+##    <chr>     <int>
+##  1 SFO - LAX 13744
+##  2 LAX - SFO 13457
+##  3 JFK - LAX 12016
+##  4 LAX - JFK 12015
+##  5 LAS - LAX  9715
+##  6 LAX - LAS  9594
+##  7 LAX - ORD  8256
+##  8 ORD - LAX  7941
+##  9 SEA - LAX  7765
+## 10 LAX - SEA  7732
+\end{verbatim}
+
+Find also the most used route (SFO -- LAX)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{popular_routes }\OperatorTok{%>%}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{() }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(n }\OperatorTok{==}\StringTok{ }\KeywordTok{max}\NormalTok{(n))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       ROUTE     n
+## 1 SFO - LAX 13744
+\end{verbatim}
+
+Plot the Top 10 most used routes
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{head}\NormalTok{(popular_routes }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(n) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{arrange}\NormalTok{(}\KeywordTok{desc}\NormalTok{(n)),}\DecValTok{10}\NormalTok{), }\KeywordTok{aes}\NormalTok{(ROUTE,n)) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat=}\StringTok{'identity'}\NormalTok{, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{fill=}\NormalTok{ROUTE)) }\OperatorTok{+}\StringTok{ }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{title=}\StringTok{"Top 10 used routes by all Airlines}\CharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }\DataTypeTok{x=}\StringTok{"Route"}\NormalTok{,}\DataTypeTok{y=}\StringTok{"Number of times used"}\NormalTok{)}\OperatorTok{+}\StringTok{ }\KeywordTok{theme_bw}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-40-1.pdf}
+
+Now, that we have the top 10 routes, find the unique routes of AA and
+it's count
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(AIRLINE,ORIGIN_AIRPORT,DESTINATION_AIRPORT) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(ORIGIN_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(ORIGIN_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{DESTINATION_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(DESTINATION_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{AIRLINE }\OperatorTok{==}\StringTok{ "AA"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 60 x 4
+## # Groups:   AIRLINE, ORIGIN_AIRPORT, DESTINATION_AIRPORT [60]
+##    AIRLINE ORIGIN_AIRPORT DESTINATION_AIRPORT     n
+##    <fct>   <fct>          <fct>               <int>
+##  1 AA      ATL            LAX                   765
+##  2 AA      AUS            LAX                  1242
+##  3 AA      BNA            LAX                   621
+##  4 AA      BOS            LAX                  1393
+##  5 AA      CLT            LAX                   892
+##  6 AA      CMH            LAX                   130
+##  7 AA      DCA            LAX                   666
+##  8 AA      DFW            LAX                  5500
+##  9 AA      EGE            LAX                   110
+## 10 AA      HNL            LAX                  1342
+## # ... with 50 more rows
+\end{verbatim}
+
+We get 60 unique routes of AA and we find the top 10 most used routes by
+AA
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(}\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(AIRLINE,ORIGIN_AIRPORT,DESTINATION_AIRPORT) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(ORIGIN_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(ORIGIN_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{DESTINATION_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(DESTINATION_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{AIRLINE }\OperatorTok{==}\StringTok{ "AA"}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{arrange}\NormalTok{(}\KeywordTok{desc}\NormalTok{(n)),}\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 10 x 4
+## # Groups:   AIRLINE, ORIGIN_AIRPORT, DESTINATION_AIRPORT [10]
+##    AIRLINE ORIGIN_AIRPORT DESTINATION_AIRPORT     n
+##    <fct>   <fct>          <fct>               <int>
+##  1 AA      DFW            LAX                  5500
+##  2 AA      LAX            DFW                  5496
+##  3 AA      LAX            JFK                  3804
+##  4 AA      JFK            LAX                  3803
+##  5 AA      LAX            ORD                  3079
+##  6 AA      ORD            LAX                  3078
+##  7 AA      MIA            LAX                  2652
+##  8 AA      LAX            MIA                  2651
+##  9 AA      LAS            LAX                  1993
+## 10 AA      LAX            LAS                  1993
+\end{verbatim}
+
+Put this into a new data frame named `AA\_routes' for easier
+manipulation, merge origin and destination column into a new column
+called `Route' (same as popular\_routes df)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{AA_routes <-}\StringTok{ }\KeywordTok{count}\NormalTok{(flights_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(ORIGIN_AIRPORT,DESTINATION_AIRPORT) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(ORIGIN_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(ORIGIN_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{DESTINATION_AIRPORT }\OperatorTok{==}\StringTok{ }\KeywordTok{unique}\NormalTok{(DESTINATION_AIRPORT) }\OperatorTok{&}\StringTok{ }\NormalTok{AIRLINE }\OperatorTok{==}\StringTok{ "AA"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Merge Origin and Destination column into a new column called `Route' and
+move it to first
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{AA_routes}\OperatorTok{$}\NormalTok{ROUTE <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(AA_routes}\OperatorTok{$}\NormalTok{ORIGIN_AIRPORT,}\StringTok{"-"}\NormalTok{,AA_routes}\OperatorTok{$}\NormalTok{DESTINATION_AIRPORT)}
+\NormalTok{AA_routes}\OperatorTok{$}\NormalTok{ORIGIN_AIRPORT <-}\StringTok{ }\OtherTok{NULL}
+\NormalTok{AA_routes}\OperatorTok{$}\NormalTok{DESTINATION_AIRPORT <-}\StringTok{ }\OtherTok{NULL}
+\NormalTok{AA_routes <-}\StringTok{ }\NormalTok{AA_routes[,}\KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{)]}
+\end{Highlighting}
+\end{Shaded}
+
+Plot the Routes for Airline ``AA''
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{head}\NormalTok{(AA_routes }\OperatorTok{%>%}\StringTok{ }\KeywordTok{group_by}\NormalTok{(n) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{arrange}\NormalTok{(}\KeywordTok{desc}\NormalTok{(n)),}\DecValTok{10}\NormalTok{), }\KeywordTok{aes}\NormalTok{(ROUTE,n)) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat=}\StringTok{'identity'}\NormalTok{, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{fill=}\NormalTok{ROUTE)) }\OperatorTok{+}\StringTok{ }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{title=}\StringTok{"Top 10 used routes by AA}\CharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }\DataTypeTok{x=}\StringTok{"Route"}\NormalTok{,}\DataTypeTok{y=}\StringTok{"Number of times used"}\NormalTok{)}\OperatorTok{+}\StringTok{ }\KeywordTok{theme_bw}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-45-1.pdf}
+
+We can infer from 2 plots that 6 of the top 10 most used routes by AA is
+the same as the top 10 most used routes by all airlines. So, AA runs on
+busy routes and this causes delay in it's flights due to other factors
+like the number of passengers etc.
+
+\hypertarget{the-busier-the-route-the-more-the-delay}{%
+\section{The Busier the route, the more the
+Delay}\label{the-busier-the-route-the-more-the-delay}}
+
+\hypertarget{data-manipulation-phase}{%
+\subsubsection{Data Manipulation phase:}\label{data-manipulation-phase}}
+
+Find the mean average and departure delay for each unique route in the
+dataset
+
+Merge the origin and destination airport columns to get the `ROUTE'
+column, similar to how we did with popular routes
+
+Calculate the mean of ARRIVAL\_DELAY and DEPARTURE\_DELAY by group of
+ROUTE
+
+Take the top 10 routes where the arrival and departure delay is the
+highest
+
+\begin{verbatim}
+##         ROUTE ARRIVAL_DELAY DEPARTURE_DELAY
+##  1: CID - LAX      47.00000        29.00000
+##  2: LAX - SFO      45.32557        44.62060
+##  3: SFO - LAX      44.95541        42.40017
+##  4: LAS - LAX      40.72356        35.90728
+##  5: LAX - LAS      38.16316        37.96539
+##  6: OAK - LAX      35.63790        31.32686
+##  7: LAX - OAK      33.82616        36.09492
+##  8: SJC - LAX      33.67434        28.91415
+##  9: LAX - PHX      33.55025        33.53190
+## 10: PHX - LAX      32.53784        30.29927
+\end{verbatim}
+
+\hypertarget{visualization}{%
+\subsubsection{Visualization:}\label{visualization}}
+
+Plot the top 10 routes with highest arrival delay
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-50-1.pdf}
+
+\includegraphics{CaseStudy-1_files/figure-latex/unnamed-chunk-51-1.pdf}
+
+\hypertarget{we-find-that-9-of-the-routes-in-these-top-10-belong-to-top-20-busy-routes.}{%
+\paragraph{We find that 9 of the routes in these top 10 belong to top 20
+busy
+routes.}\label{we-find-that-9-of-the-routes-in-these-top-10-belong-to-top-20-busy-routes.}}
+
+
+\end{document}
